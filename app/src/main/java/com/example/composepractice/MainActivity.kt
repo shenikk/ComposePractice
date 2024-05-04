@@ -12,8 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,13 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComposePracticeTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MyApp()
-                }
+                MyApp(modifier = Modifier.fillMaxSize())
             }
         }
     }
@@ -40,12 +36,27 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     ComposePracticeTheme {
-        MyApp()
+        Greetings()
     }
 }
 
 @Composable
-fun MyApp(
+fun MyApp(modifier: Modifier = Modifier) {
+    var shouldShowOnboarding by remember { mutableStateOf(true) }
+
+    Surface(modifier) {
+        if (shouldShowOnboarding) {
+            // передаем лямбду, а не позволяем другой компоузабл функции мутировать состояние.
+            // таким образом композабл функция становится переиспользуемой
+            OnboardingScreen(onContinueClicked = { shouldShowOnboarding = false })
+        } else {
+            Greetings()
+        }
+    }
+}
+
+@Composable
+fun Greetings(
     modifier: Modifier = Modifier,
     names: List<String> = listOf("World", "Compose")
 ) {
@@ -60,8 +71,8 @@ fun MyApp(
 fun Greeting(name: String) {
     // remember работает как кэш. Первый раз выполняется код в лямбде и возвращает объект.
     // все последующие рекомпозиции remember будет возвращать ранее созданный объект
-    val expanded = remember { mutableStateOf(false) }
-    val extraPadding = if (expanded.value) 48.dp else 0.dp
+    var expanded by remember { mutableStateOf(false) }
+    val extraPadding = if (expanded) 48.dp else 0.dp
 
     Surface(
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp),
@@ -78,11 +89,11 @@ fun Greeting(name: String) {
             }
             ElevatedButton(
                 onClick = {
-                    expanded.value = !expanded.value
+                    expanded = !expanded
                     println("Greeting2 ${expanded.hashCode()}")
                 }
             ) {
-                Text(text = if (expanded.value) "Show less" else "Show more")
+                Text(text = if (expanded) "Show less" else "Show more")
             }
         }
     }
